@@ -127,7 +127,7 @@ async def onMessage(message: Message):
 
             rmsg = await bot.reply_to(
                 message,
-                makeFont("🏁 | making calender for " + f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})" + "\n⏳ | timer: 300 seconds"),
+                makeFont("🏁 | making calender for " + f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})" + f"\n⏳ | timer: 300 seconds"),
                 reply_markup=markup,
                 parse_mode="Markdown"
             )
@@ -181,7 +181,7 @@ async def onMessage(message: Message):
 
             calenders_step[message.from_user.id]['step'] = None
             await bot.edit_message_text(
-                makeFont("🏁 | making calender for " + f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})" + "\n⏳ | timer: {calenders_step[message.from_user.id]['next']} seconds"),
+                makeFont("🏁 | making calender for " + f"[{message.from_user.full_name}](tg://user?id={message.from_user.id})" + f"\n⏳ | timer: {calenders_step[message.from_user.id]['next']} seconds"),
                 chat_id=message.chat.id,
                 message_id=message.id,
                 reply_markup=markup,
@@ -357,7 +357,7 @@ async def onCallbackQueries(call: CallbackQuery):
             )
 
             await bot.edit_message_text(
-                makeFont("🏁 | making calender for " + f"[{call.from_user.full_name}](tg://user?id={call.from_user.id})" + "\n⏳ | timer: {calenders_step[call.from_user.id]['next']} seconds"),
+                makeFont("🏁 | making calender for " + f"[{call.from_user.full_name}](tg://user?id={call.from_user.id})" + f"\n⏳ | timer: {calenders_step[call.from_user.id]['next']} seconds"),
                 chat_id=call.message.chat.id,
                 message_id=call.message.id,
                 reply_markup=markup,
