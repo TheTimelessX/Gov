@@ -1,5 +1,7 @@
 import sqlite3
 import json
+import hashlib
+import random
 from interface import ( UserInterface, UserResponse, AdminInterface, AdminResponse, roles, roles_list )
 
 class UserManager(object):
@@ -28,6 +30,94 @@ class UserManager(object):
         self.dbs.execute("CREATE TABLE IF NOT EXISTS gov_users (uid INTEGER PRIMARY KEY, role TEXT, prom_by TEXT)")
         self.dbs.execute("CREATE TABLE IF NOT EXISTS gov_admins (uid INTEGER PRIMARY KEY)")
         self.dbs.execute("CREATE TABLE IF NOT EXISTS options (role TEXT PRIMARY KEY, can_prom TEXT)")
+        self.dbs.execute("CREATE TABLE IF NOT EXISTS calender (uid INTEGER PRIMARY KEY, name TEXT, trigger INTEGER, next INTEGER, message TEXT, hash TEXT)")
+        # Trigger: boolean -> do a thing every specifed time
+
+    def s3to3(self, input_list): # Split 3 to 3
+        return [input_list[i:i + 3] for i in range(0, len(input_list), 3)]
+
+    async def getCalender(self):
+        return self.dbs.execute("SELECT * FROM calender").fetchall()
+    
+    async def addToCalender(
+        self,
+        uid: int,
+        name: str,
+        trigger: bool,
+        next: int,
+        message: str
+    ):
+        sha256 = hashlib.sha256()
+        sha256.update(f"{uid}-{name}-{trigger}-{next}-{random.randint(10000, 999999999999)}".encode())
+        sha = sha256.hexdigest()[0:7].upper()
+        self.dbs.execute("INSERT INTO calender (uid, name, trigger, next, message, hash) VALUES (?, ?, ?, ?, ?, ?)", (
+            uid,
+            name,
+            1 if trigger is True else False,
+            next,
+            message,
+            sha
+        ))
+        self.dbs.commit()
+        return {
+            "status": "OK",
+            "hash": sha
+        }
+    
+    async def getCalenderHashes(self):
+        family = []
+        for cal in await self.getCalender():
+            family.append(cal[-1])
+
+        return family
+    
+    async def removeFromCalender(self, hash: str):
+        for cal in await self.getCalender():
+            if cal[-1] == hash:
+                self.dbs.execute("DELETE FROM calender WHERE hash = ?", (
+                    hash,
+                ))
+                self.dbs.commit()
+                return {
+                    "status": "OK"
+                }
+        
+        return {
+            "status": "ERROR",
+            "message": "Cannot find hash"
+        }
+    
+    async def getCalenderSystem(self, hash: str):
+        for cal in await self.getCalender():
+            if cal[-1] == hash:
+                return {
+                    "status": "OK",
+                    "calender": {
+                        "for": cal[0],
+                        "name": cal[1],
+                        "is_trigger": False if cal[2] == 0 else True,
+                        "next": cal[3],
+                        "message": cal[4],
+                        "hash": cal[5]
+                    }
+                }
+        
+        return {
+            "status": "ERROR",
+            "message": "Cannot find hash"
+        }
+
+    async def getRoleOfUser(self, uid: int) -> roles:
+        u = await self.getUserByUid(uid)
+        if u.status == "OK":return u.user.role
+        else:return "member"
+    
+    async def getUsersByRole(self, role: roles):
+        uids = set()
+        for user in await self.getAll():
+            if user[1] == role:uids.add(user[0])
+        
+        return list(uids)
 
     async def getAllOptions(self):
         return self.dbs.execute("SELECT * FROM options").fetchall()
@@ -110,7 +200,7 @@ class UserManager(object):
             }
         )
     
-    async def add(self, uid: int) -> UserResponse:
+    async def add(self, uid: int, custom_role: roles = "member") -> UserResponse:
         user = await self.getUserByUid(uid)
 
         if user.status == "OK":
@@ -123,7 +213,7 @@ class UserManager(object):
             "INSERT INTO gov_users (uid, role, prom_by) VALUES (?, ?, ?)",
             (
                 uid,
-                "member",
+                custom_role,
                 0
             )
         )
@@ -133,7 +223,7 @@ class UserManager(object):
             "status": "OK",
             "user": (
                 uid,
-                "member",
+                custom_role,
                 0
             )
         })
