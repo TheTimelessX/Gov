@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from interface import ( UserInterface, UserResponse, AdminInterface, AdminResponse, roles )
+from interface import ( UserInterface, UserResponse, AdminInterface, AdminResponse, roles, roles_list )
 
 class UserManager(object):
     def __init__(self):
@@ -34,11 +34,13 @@ class UserManager(object):
 
     async def getOption(self, role: str):
         for option in await self.getAllOptions():
-            if option[0] == "role":
-                option[1] = json.loads(option[1])
+            if option[0] == role:
                 return {
                     "status": "OK",
-                    "option": option
+                    "option": (
+                        option[0],
+                        json.loads(option[1])
+                    )
                 }
             
         return {
@@ -59,7 +61,7 @@ class UserManager(object):
         for key in allkeys:
             self.dbs.execute("INSERT INTO options (role, can_prom) VALUES (?, ?)", (
                 key,
-                self.options[key]
+                json.dumps(self.options[key])
             ))
         
         self.dbs.commit()
@@ -172,8 +174,9 @@ class UserManager(object):
         opts = await self.getOption(_action_holder.user.role)
         if opts['status'] == "OK":
             if to_role in opts['option'][1]:
-                self.dbs.execute("UPDATE gov_users SET role = ? WHERE uid = ?", (
+                self.dbs.execute("UPDATE gov_users SET role = ?, prom_by = ? WHERE uid = ?", (
                     to_role,
+                    _action_holder.user.uid,
                     _bring_action_for.user.uid
                 ))
                 self.dbs.commit()
@@ -197,32 +200,30 @@ class UserManager(object):
         role: roles,
         which: list[roles]
     ):
-        ...
-    
-    # async def addAdmin(
-    #     self,
-    #     uid: int
-    # ):
-    #     admin = await self.getAdminByUid(uid)
+        if role in roles_list:
+            for rl in which:
+                if not rl in roles_list:
+                    return {
+                        "status": "ERROR",
+                        "message": "Invalid role detected in prom list"
+                    }
+            
+            if not "member" in which:
+                which.append("member")
 
-    #     if admin.status == "OK":
-    #         return AdminResponse({
-    #             "status": "ERROR",
-    #             "message": "Admin exists"
-    #         })
-        
-    #     self.dbs.execute("INSERT INTO gov_admins (uid) VALUES (?)", (
-    #         uid,
-    #     ))
-    #     self.dbs.commit()
+            self.options[role] = which
+            self.dbs.execute("UPDATE options SET can_prom = ? WHERE role = ?", (
+                json.dumps(which),
+                role
+            ))
+            self.dbs.commit()
 
-    #     return AdminResponse({
-    #         "status": "OK",
-    #         "admin": (
-    #             uid,
-    #         )
-    #     })
-    
-    # async def removeAdmin(
+            return {
+                "status": "OK"
+            }
         
-    # )
+        else:
+            return {
+                "status": "ERROR",
+                "message": "Invalid role detected"
+            }

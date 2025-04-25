@@ -9,6 +9,14 @@ roles = Literal[
     'leader'
 ]
 
+roles_list = [
+    'null',
+    'member',
+    'police',
+    'manager',
+    'leader'
+]
+
 class UserInterface(object):
     def __init__(self, result: tuple = ()):
         self.result = result
