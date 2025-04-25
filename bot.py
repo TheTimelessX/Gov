@@ -12,7 +12,9 @@ import time
 
 calenders_step = {}
 global manager
+global managerx
 manager = UserManager()
+managerx = UserManager()
 sch = schedule.Scheduler()
 bot = AsyncTeleBot(
     getToken()
@@ -192,8 +194,8 @@ async def onCallbackQueries(call: CallbackQuery):
             try:
                 page = int(spl[2])
                 index_page = page-1
-                hashes = await manager.getCalenderHashes()
-                h3 = manager.s3to3(hashes)
+                hashes = await managerx.getCalenderHashes()
+                h3 = managerx.s3to3(hashes)
                 if len(h3) == 0:
                     await bot.edit_message_text(
                         makeFont("🔵 | No calender added"),
@@ -263,12 +265,14 @@ async def onCallbackQueries(call: CallbackQuery):
             )
 
             await bot.edit_message_text(
-                makeFont("🔰 | Panel started from ") + f'<a href="tg://user?id={call.from_user.id}">{call.from_user.full_name}</a>', parse_mode="HTML", reply_markup=markup
+                makeFont("🔰 | Panel started from ") + f'<a href="tg://user?id={call.from_user.id}">{call.from_user.full_name}</a>', parse_mode="HTML", reply_markup=markup,
+                chat_id=call.message.chat.id,
+                message_id=call.message.id
             )
 
     elif call.data.startswith("leaders"):
         if call.from_user.id == uid:
-            leaders = await manager.getUsersByRole("leader")
+            leaders = await managerx.getUsersByRole("leader")
             stx = ''
             for leader in leaders:
                 stx += f"● | [{leader}](tg://user?id={leader})\n"
@@ -285,7 +289,7 @@ async def onCallbackQueries(call: CallbackQuery):
 
     elif call.data.startswith("polices"):
         if call.from_user.id == uid:
-            polices = await manager.getUsersByRole("police")
+            polices = await managerx.getUsersByRole("police")
             stx = ''
             for police in polices:
                 stx += f"● | [{police}](tg://user?id={police})\n"
@@ -302,7 +306,7 @@ async def onCallbackQueries(call: CallbackQuery):
 
     elif call.data.startswith("managers"):
         if call.from_user.id == uid:
-            managers = await manager.getUsersByRole("manager")
+            managers = await managerx.getUsersByRole("manager")
             stx = ''
             for manager in managers:
                 stx += f"● | [{manager}](tg://user?id={manager})\n"
@@ -374,7 +378,7 @@ async def onCallbackQueries(call: CallbackQuery):
 
     elif call.data.startswith("addcalender"):
         if call.from_user.id == uid:
-            await manager.addToCalender(
+            await managerx.addToCalender(
                 uid,
                 call.from_user.full_name,
                 calenders_step[call.from_user.id]['trigger'],
