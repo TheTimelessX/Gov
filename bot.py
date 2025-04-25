@@ -59,7 +59,7 @@ async def onMessage(message: Message):
 
             await bot.reply_to(message, makeFont("🔰 | Panel started from ") + f'<a href="tg://user?id={message.from_user.id}">{message.from_user.full_name}</a>', parse_mode="HTML", reply_markup=markup)
 
-    elif message.text.startswith("پروفایل") or message.text.startswith("profile") or message.text.startswith("/profile"):
+    if message.text.startswith("پروفایل") or message.text.startswith("profile") or message.text.startswith("/profile"):
         if message.reply_to_message:
             profiles = await bot.get_user_profile_photos(message.reply_to_message.from_user.id)
             if profiles.total_count > 0:
@@ -128,7 +128,8 @@ async def onMessage(message: Message):
             rmsg = await bot.reply_to(
                 message,
                 makeFont(f"🏁 | making calender for [{message.from_user.full_name}](tg://user?id={message.from_user.id})\n⏳ | timer: 5 mins"),
-                reply_markup=markup
+                reply_markup=markup,
+                parse_mode="Markdown"
             )
 
             calenders_step[message.from_user.id]['message_id'] = rmsg.id
@@ -158,7 +159,8 @@ async def onMessage(message: Message):
                     makeFont(f"🏁 | making calender for [{message.from_user.full_name}](tg://user?id={message.from_user.id})\n⏳ | timer: {calenders_step[message.from_user.id]['next']} seconds"),
                     chat_id=message.chat.id,
                     message_id=message.id,
-                    reply_markup=markup
+                    reply_markup=markup,
+                    parse_mode="Markdown"
                 )
             else: await bot.reply_to(message, makeFont("🔓 | Inputed text is not a number"))
 
@@ -182,7 +184,8 @@ async def onMessage(message: Message):
                 makeFont(f"🏁 | making calender for [{message.from_user.full_name}](tg://user?id={message.from_user.id})\n⏳ | timer: {calenders_step[message.from_user.id]['next']} seconds"),
                 chat_id=message.chat.id,
                 message_id=message.id,
-                reply_markup=markup
+                reply_markup=markup,
+                parse_mode="Markdown"
             )
 
 @bot.callback_query_handler(lambda call: True)
@@ -248,7 +251,7 @@ async def onCallbackQueries(call: CallbackQuery):
         if call.from_user.id == uid:
             markup = InlineKeyboardMarkup()
             markup.add(
-                InlineKeyboardButton(makeFont("calender 📅"), callback_data=f"calender_{call.from_user.id}")
+                InlineKeyboardButton(makeFont("calender 📅"), callback_data=f"seecalenderpage_{call.from_user.id}_1")
             )
             markup.add(
                 InlineKeyboardButton(makeFont("leaders 🦋"), callback_data=f"leaders_{call.from_user.id}")
@@ -346,7 +349,7 @@ async def onCallbackQueries(call: CallbackQuery):
             )
             markup.add(
                 InlineKeyboardButton(makeFont("timer ⏳"), callback_data=f"timer_{call.from_user.id}"),
-                InlineKeyboardButton(makeFont(f"message {'🔴' if calenders_step[call.from_user.id]['message'].strip() != '' else '🔵'}"), callback_data=f"message_{call.from_user.id}")
+                InlineKeyboardButton(makeFont(f"message {'🔴' if calenders_step[call.from_user.id]['message'].strip() == '' else '🔵'}"), callback_data=f"message_{call.from_user.id}")
             )
 
             markup.add(
@@ -357,7 +360,8 @@ async def onCallbackQueries(call: CallbackQuery):
                 makeFont(f"🏁 | making calender for [{call.from_user.full_name}](tg://user?id={call.from_user.id})\n⏳ | timer: {calenders_step[call.from_user.id]['next']} seconds"),
                 chat_id=call.message.chat.id,
                 message_id=call.message.id,
-                reply_markup=markup
+                reply_markup=markup,
+                parse_mode="Markdown"
             )
 
     elif call.data.startswith("timer"):
