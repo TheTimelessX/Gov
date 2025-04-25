@@ -273,7 +273,7 @@ async def onCallbackQueries(call: CallbackQuery):
     elif call.data.startswith("leaders"):
         if call.from_user.id == uid:
             leaders = await managerx.getUsersByRole("leader")
-            stx = ''
+            stx = f'🔐 | leaders are {len(leaders)}\n\n'
             for leader in leaders:
                 stx += f"● | [{leader}](tg://user?id={leader})\n"
 
@@ -290,7 +290,7 @@ async def onCallbackQueries(call: CallbackQuery):
     elif call.data.startswith("polices"):
         if call.from_user.id == uid:
             polices = await managerx.getUsersByRole("police")
-            stx = ''
+            stx = f'🔐 | polices are {len(polices)}\n\n'
             for police in polices:
                 stx += f"● | [{police}](tg://user?id={police})\n"
                 
@@ -307,7 +307,7 @@ async def onCallbackQueries(call: CallbackQuery):
     elif call.data.startswith("managers"):
         if call.from_user.id == uid:
             managers = await managerx.getUsersByRole("manager")
-            stx = ''
+            stx = f'🔐 | managers are {len(managers)}\n\n'
             for manager in managers:
                 stx += f"● | [{manager}](tg://user?id={manager})\n"
                 

@@ -115,7 +115,7 @@ class UserManager(object):
     async def getUsersByRole(self, role: roles):
         uids = set()
         for user in await self.getAll():
-            if user[1] == role:uids.add(user[0])
+            if user.role == role:uids.add(user.uid)
         
         return list(uids)
 
